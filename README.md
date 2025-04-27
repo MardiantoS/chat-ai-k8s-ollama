@@ -1,70 +1,123 @@
-# Getting Started with Create React App
+# AI Chat App with Kubernetes and Ollama
+A locally-hosted web application enabling conversations with Foundation Models, powered by Kubernetes and Ollama.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
 
-## Available Scripts
+This project creates a complete local AI chat environment using Kubernetes to orchestrate all services. Users can interact with various Foundation Models through a browser-based interface, with all processing happening on your local machine - no cloud dependencies required.
 
-In the project directory, you can run:
+## Key Technologies
 
-### `npm start`
+### Kubernetes (K8s)
+[Kubernetes](https://kubernetes.io/) is an open-source container orchestration platform that automates deploying, scaling, and managing containerized applications. In this project, Kubernetes handles the deployment and networking of all components, ensuring they work together seamlessly while providing scalability and resilience.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Ollama
+[Ollama](https://ollama.com/) is a lightweight framework for running and serving large language models locally. It simplifies running open-source AI models on personal computers by handling model downloading, optimization, and providing a consistent API for interacting with different models.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Architecture
 
-### `npm test`
+The application runs entirely within a single-node Kubernetes cluster with each component deployed in its own pod:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Chat AI K8S Ollama Architecture Diagram](images/chat-ai-k8s-ollama-architecture-diagram.png)
 
-### `npm run build`
+## Project Structure 
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+chat-ai-k8s-ollama/
+├── frontend/
+│   ├── src/                            # React application source files
+│   └── Dockerfile                      # Container image definition for frontend Web App
+├── backend/                            # Backend service implementations
+│   ├── src/                            # React application source files for backend API Proxy
+│   └── Dockerfile                      # Container image definition for backend API Proxy
+└── k8s/                                # Kubernetes configuration files
+    ├── frontend/
+    │   ├── frontend-deployment.yaml   # Frontend pod deployment configuration
+    │   └── frontend-service.yaml      # Frontend service network configuration
+    └── backend/
+        ├── api-proxy-deployment.yaml  # API proxy deployment configuration
+        ├── api-proxy-service.yaml     # API proxy service configuration
+        ├── ollama-deployment.yaml     # Ollama deployment configuration
+        ├── ollama-service.yaml        # Ollama service configuration
+        └── ollama-pvc.yaml            # Persistent Volume Claim for Ollama models
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Prerequisites
+- Docker Desktop with Kubernetes enabled
+- Container repository (e.g., Docker Hub)
+- Node.js and npm for local development
+- Minimum storage 3GB+ for Llama3.2 3B
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Getting Started
 
-### `npm run eject`
+1. Clone the GitHub repository
+```bash
+git clone https://github.com/MardiantoS/chat-ai-k8s-ollama.git
+cd chat-ai-k8s-ollama
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Ollama API
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. Deploy the Ollama API pod
+```bash
+kubectl apply -f k8s/backend/ollama-pvc.yaml
+kubectl apply -f k8s/backend/ollama-deployment.yaml
+kubectl apply -f k8s/backend/ollama-service.yaml
+```
+Note: the Ollama API is using Llama3.2 3B model. If you'd like to use a different model, edit `k8s/backend/ollama-deployment.yaml`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### API Proxy
+3. Build the API Proxy backend service container image. Replace `CONTAINER_REPOSITORY` with your own container repository (e.g., if you are using Docker Hub, this would be your username)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+docker build -t ${CONTAINER_REPOSITORY}/ollama-api:latest ./backend
+```
 
-## Learn More
+```bash
+docker push ${CONTAINER_REPOSITORY}/ollama-api:latest
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. Edit `k8s/backend/api-proxy-deployment.yaml` and replace `CONTAINER_REPOSITORY` with your own container repository.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+5. Deploy the API Proxy pod.
 
-### Code Splitting
+```bash
+kubectl apply -f k8s/backend/api-proxy-deployment.yaml
+kubectl apply -f k8s/backend/api-proxy-service.yaml
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Front-end Web App
 
-### Analyzing the Bundle Size
+6. Build the front-end React web app container image. 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+docker build -t ${CONTAINER_REPOSITORY}/chat-app-frontend:latest ./frontend
+```
 
-### Making a Progressive Web App
+```bash
+docker push ${CONTAINER_REPOSITORY}/chat-app-frontend:latest
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+7. Edit `k8s/frontend/frontend-deployment.yaml` and replace `CONTAINER_REPOSITORY` with your own container repository.
 
-### Advanced Configuration
+8. Deploy the Frontend Web App pod.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```
+kubectl apply -f k8s/frontend/frontend-deployment.yaml
+kubectl apply -f k8s/frontend/frontend-service.yaml
+```
 
-### Deployment
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Open a web browser and navigate to `http://localhost:777`. Here are some suggestions on queries you can ask:
+- "Craft a haiku that captures the essence of Artificial Intelligence."
+- "If you were explaining foundation models to a curious high school student, how would you break down the concept?"
+- "Could you provide an accessible explanation of AI agents and their core functions?"
 
-### `npm run build` fails to minify
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use this work in your research or project, please use the following citation:
+> Mardianto Hadiputro. (2025). AI Chat App with Kubernetes and Ollama. GitHub. https://github.com/MardiantoS/chat-ai-k8s-ollama

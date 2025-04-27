@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-deployment
+  labels:
+    app: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Start Ollama server
+          ollama serve &
+          server_pid=$!
+          
+          # Wait for server to start
+          echo "Waiting for Ollama server to start..."
+          sleep 10
+          
+          # Pull the model with verbose output
+          echo "Starting Llama3.2 model download (this may take several minutes)..."
+          ollama pull llama3.2 &
+          pull_pid=$!
+          
+          # Check status every 30 seconds
+          while kill -0 $pull_pid 2>/dev/null; do
+            echo "$(date): Model download still in progress..."
+            sleep 30
+          done
+          
+          echo "Model download completed!"
+          
+          # Keep container running with the server
+          wait $server_pid
+        ports:
+        - containerPort: 11434
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4"
+          limits:
+            memory: "12Gi" 
+            cpu: "6"
+        volumeMounts:
+        - name: ollama-data
+          mountPath: /root/.ollama
+      volumes:
+      - name: ollama-data
+        persistentVolumeClaim:
+          claimName: ollama-pvc

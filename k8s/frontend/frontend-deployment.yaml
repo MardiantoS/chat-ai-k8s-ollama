@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-app-frontend
+  labels:
+    app: chat-app-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-app-frontend
+  template:
+    metadata:
+      labels:
+        app: chat-app-frontend
+    spec:
+      containers:
+      - name: chat-app-frontend
+        image: ${CONTAINER_REPOSITORY}/chat-app-frontend:latest
+        env:
+        - name: REACT_APP_API_URL
+          value: "http://localhost:8080/api"
+        ports:
+        - containerPort: 80

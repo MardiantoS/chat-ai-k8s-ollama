@@ -1,0 +1,44 @@
+.messages-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+  }
+  
+  .message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 70%;
+    word-break: break-word;
+  }
+  
+  .user {
+    background-color: #0084ff;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+  
+  .other {
+    background-color: #e5e5ea;
+    color: black;
+    align-self: flex-start;
+  }
+  
+  .empty-message {
+    color: #999;
+    text-align: center;
+    margin-top: 30px;
+  }
+
+.message.ai {
+  background-color: #f0f7ff;
+  align-self: flex-start;
+  border-radius: 18px 18px 18px 0;
+}
+
+.message.ai.isError {
+  background-color: #fff0f0;
+  color: #c00;
+}
