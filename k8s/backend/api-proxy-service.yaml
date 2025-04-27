@@ -4,7 +4,7 @@ metadata:
   name: ollama-api-proxy
 spec:
   selector:
-    app: ollama-api
+    app: ollama-api-proxy
   ports:
   - port: 8080
     targetPort: 3001

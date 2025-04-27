@@ -50,61 +50,57 @@ chat-ai-k8s-ollama/
 ## Getting Started
 
 1. Clone the GitHub repository
-```bash
-git clone https://github.com/MardiantoS/chat-ai-k8s-ollama.git
-cd chat-ai-k8s-ollama
-```
+    ```bash
+    git clone https://github.com/MardiantoS/chat-ai-k8s-ollama.git
+    cd chat-ai-k8s-ollama
+    ```
 
-### Ollama API
+### Ollama API Service
 
 2. Deploy the Ollama API pod
-```bash
-kubectl apply -f k8s/backend/ollama-pvc.yaml
-kubectl apply -f k8s/backend/ollama-deployment.yaml
-kubectl apply -f k8s/backend/ollama-service.yaml
-```
-Note: the Ollama API is using Llama3.2 3B model. If you'd like to use a different model, edit `k8s/backend/ollama-deployment.yaml`
+    ```bash
+    kubectl apply -f k8s/backend/ollama-pvc.yaml
+    kubectl apply -f k8s/backend/ollama-deployment.yaml
+    kubectl apply -f k8s/backend/ollama-service.yaml
+    ```
+Note: the Ollama API is using Llama3.2 3B model. If you'd like to use a different model, edit these files:`k8s/backend/ollama-deployment.yaml` and `backend/src/controllers/chatController.js`
 
 ### API Proxy
-3. Build the API Proxy backend service container image. Replace `CONTAINER_REPOSITORY` with your own container repository (e.g., if you are using Docker Hub, this would be your username)
+3. Build the API Proxy backend service container image and push the container image to your repository.
+   
+   Note: Replace `${CONTAINER_REPOSITORY}` with your own container repository (e.g., if you are using Docker Hub, this would be your username)
 
-```bash
-docker build -t ${CONTAINER_REPOSITORY}/ollama-api:latest ./backend
-```
-
-```bash
-docker push ${CONTAINER_REPOSITORY}/ollama-api:latest
-```
+    ```bash
+    docker build -t ${CONTAINER_REPOSITORY}/ollama-api-proxy:latest ./backend
+    docker push ${CONTAINER_REPOSITORY}/ollama-api-proxy:latest
+    ```
 
 4. Edit `k8s/backend/api-proxy-deployment.yaml` and replace `CONTAINER_REPOSITORY` with your own container repository.
 
 5. Deploy the API Proxy pod.
 
-```bash
-kubectl apply -f k8s/backend/api-proxy-deployment.yaml
-kubectl apply -f k8s/backend/api-proxy-service.yaml
-```
+    ```bash
+    kubectl apply -f k8s/backend/api-proxy-deployment.yaml
+    kubectl apply -f k8s/backend/api-proxy-service.yaml
+    ```
 
 ### Front-end Web App
 
-6. Build the front-end React web app container image. 
+6. Build the front-end React web app container image and push the container image to your repository. Same with step 3, replace `${CONTAINER_REPOSITORY}` with your own container repository
 
-```bash
-docker build -t ${CONTAINER_REPOSITORY}/chat-app-frontend:latest ./frontend
-```
-
-```bash
-docker push ${CONTAINER_REPOSITORY}/chat-app-frontend:latest
-```
+    ```bash
+    docker build -t ${CONTAINER_REPOSITORY}/chat-app-frontend:latest ./frontend
+    docker push ${CONTAINER_REPOSITORY}/chat-app-frontend:latest
+    ```
 
 7. Edit `k8s/frontend/frontend-deployment.yaml` and replace `CONTAINER_REPOSITORY` with your own container repository.
 
 8. Deploy the Frontend Web App pod.
 
-```
-kubectl apply -f k8s/frontend/frontend-deployment.yaml
-kubectl apply -f k8s/frontend/frontend-service.yaml
-```
+    ```
+    kubectl apply -f k8s/frontend/frontend-deployment.yaml
+    kubectl apply -f k8s/frontend/frontend-service.yaml
+    ```
 
 ## Usage
 
